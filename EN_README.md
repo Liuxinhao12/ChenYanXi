@@ -130,7 +130,8 @@ chenyanxi/
 
 Optionally, the shell can also be compiled into `dist/` or `build/` directories using packers.
 ```
-
+<img src="image/Screenshot 2025-06-24 185736.png" width="600"/>
+<img src="image/Screenshot 2025-06-24 185656.png" width="600"/>
 ---
 
 ## 📌 Notes
