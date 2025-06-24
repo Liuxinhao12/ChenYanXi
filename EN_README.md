@@ -1,101 +1,93 @@
-# 🧬 ChenYanXi - Multi-layer Encryption & Advanced Evasion Shell Generator
+# 🧬 ChenYanXi · Advanced Multi-layer Encrypted AV-Evasion Shell Generator
 
-> 👤 Author: Mingshenhk  
-> 📌 Purpose: Security Research / Encryption Experimentation / Shell Generator Development  
-> ⚠️ **Disclaimer: This project is for educational and research purposes only. Do NOT use it for any illegal activities. Use at your own risk.**
+> 👤 Author: **Mingshenhk**
+> 🎯 Purpose: Security Research / Obfuscation Experiments / AV-Evasion Testing
+> ⚠️ **Disclaimer: This tool is strictly for educational and authorized testing purposes only. Illegal use is strictly prohibited!**
 
 ---
 
 ## 📖 Project Overview
 
-**ChenYanXi** is an advanced Python-based shell generator framework designed for studying key techniques in encryption obfuscation, sandbox evasion, and in-memory payload execution. It allows users to wrap arbitrary binary files (e.g., `.elf`, `.exe`, shellcode) in a **multi-layer encryption shell**, and automatically generate a Python script capable of anti-debugging, self-protection, and in-memory execution.
+**ChenYanXi** is an advanced shell wrapper generation framework built with Python, designed for security researchers and red team operators. It integrates cutting-edge techniques such as **multi-layer dynamic encryption**, **control flow obfuscation**, **anti-sandbox detection**, and **fileless in-memory execution**.
 
-This project integrates features such as dynamic key derivation, AES/DES randomized multi-layer encryption, string/control flow obfuscation, virtual machine and debugger detection, registry-based stealth, and fileless execution. It aims to help security researchers understand modern Advanced Persistent Threat (APT) persistence techniques and evasive shell design.
+It can wrap any binary payload (e.g., `.elf`, `.exe`, raw shellcode) into a highly obfuscated Python script with **strong anti-analysis, minimal detection rate**, and **cross-platform adaptability**. The output can be further compiled into a stealthy standalone binary using **Nuitka**.
 
 ---
 
-## ✨ Key Features
+## ✨ Features
 
-| Module | Description |
-|--------|-------------|
-| 🔐 Multi-layer Compression + Encryption | Each layer uses `zlib` compression + random AES/DES encryption, supporting up to 8 nested layers |
-| 🔑 Dynamic Key Derivation | Uses `PBKDF2-HMAC-SHA256` to derive keys and IVs from a master secret and salt |
-| 🌀 Control Flow Obfuscation | Injects fake control flow logic to disrupt static analysis and reverse engineering |
-| 🧱 String Obfuscation | Encodes all critical strings using `chr(x)` to evade signature matching |
-| 🔎 Sandbox and Debugger Detection | Automatically detects VirtualBox, VMware, QEMU, and common debugger indicators |
-| 🗂️ Registry Stealth | Simulates writing startup keys to Windows Registry (not real persistence) |
-| 🧬 In-Memory Execution | Executes decrypted payload using `VirtualAlloc` + `CreateThread` without writing to disk |
+| Module                                      | Description                                                       |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| 🔐 **Multi-layer Encryption + Compression** | Supports up to 8 layers of combined `zlib` + AES/DES encryption   |
+| 🔑 **Dynamic Key Derivation**               | Uses `PBKDF2-HMAC-SHA256` with salt for layer-wise key derivation |
+| 🌀 **Control Flow Obfuscation**             | Injects decoy control flow to confuse static analysis             |
+| 🔎 **Anti-Sandbox / Anti-Debug**            | Detects VMs and debuggers, terminates on detection                |
+| 🧱 **String Obfuscation**                   | Encodes sensitive strings via `chr()` concatenation               |
+| 🧬 **In-Memory Execution**                  | Executes entirely in RAM, avoids file I/O                         |
+| 🗂️ **Registry Persistence Simulation**     | Fakes autorun entries without actual registry writing             |
 
 ---
 
 ## ⚙️ Technical Details
 
-### 🔐 Multi-layer Encryption
+### 🔐 Multi-layer Encryption Logic
 
-Each processing layer includes:
+Each encryption layer performs the following:
 
-1. Compressing raw data with `zlib`  
-2. Appending fake data bytes (e.g., `\x00\xFF`)  
-3. Randomly choosing AES or DES (CBC mode) for encryption  
-4. Base64 encoding the result  
+1. Compresses original data using `zlib`
+2. Inserts fake bytes (e.g., `\x00\xFF`) for signature pollution
+3. Randomly selects **AES** or **DES** (CBC mode) for encryption
+4. Wraps the result with Base64 encoding
 
-Up to 8 encryption layers are supported, forming an onion-style structure that significantly increases reverse-engineering complexity.
-
----
-
-### 🔑 Key Derivation
-
-Keys and IVs are derived per layer using:
-
-```python
-hashlib.pbkdf2_hmac("sha256", secret, salt, 100000, dklen)
-````
-
-* `secret` and `salt` are randomly generated using `get_random_bytes()`
-* Each layer has a unique derived key and IV to prevent reuse or detection
+With up to **8 nested layers**, the structure becomes onion-like, significantly increasing reverse engineering difficulty.
 
 ---
 
-### 🌀 Obfuscation Design
+### 🔑 Key Derivation Mechanism
 
-#### Control Flow Obfuscation
-
-Fake logic like the following is inserted:
+Each layer uses a unique key and IV, derived as follows:
 
 ```python
-if random.random() < 0.99: pass  # control flow noise
+hashlib.pbkdf2_hmac("sha256", secret, salt, 100000, dklen=32)
 ```
 
-This disrupts the control flow graph and confuses static analysis tools.
-
-#### String Obfuscation
-
-Critical strings such as registry paths are converted to:
-
-```python
-chr(83)+chr(111)+chr(102)+chr(116)+...
-```
-
-Avoids being flagged by static signatures or rules.
+* Both `secret` and `salt` are generated using `get_random_bytes()`
+* Prevents key reuse and avoids static detection patterns
 
 ---
 
-### 🔍 Anti-Sandbox & Anti-Debugging
+### 🌀 Obfuscation Examples
 
-The following logic is embedded to detect sandboxed or analyzed environments:
+**Control flow noise injection:**
 
 ```python
-def is_debugged(): return ctypes.windll.kernel32.IsDebuggerPresent()
-def is_vm(): return any(x in platform.platform().lower() for x in ["vbox", "vmware", "qemu", "sandbox"])
+if random.random() < 0.99:
+    pass  # Noise
 ```
 
-If such conditions are detected, the shell exits immediately.
+**String obfuscation (e.g., for registry path):**
+
+```python
+reg_key = chr(83)+chr(111)+chr(102)+chr(116)+...
+```
 
 ---
 
-### 🧬 Fileless In-Memory Execution
+### 🔍 Sandbox / Debugger Detection
 
-After decrypting the payload, it is directly injected into memory via:
+```python
+def is_debugged():
+    return ctypes.windll.kernel32.IsDebuggerPresent()
+
+def is_vm():
+    return any(x in platform.platform().lower() for x in ["vbox", "vmware", "qemu", "sandbox"])
+```
+
+On detection, execution is immediately terminated.
+
+---
+
+### 🧬 In-Memory Execution (Windows)
 
 ```python
 ptr = VirtualAlloc(...)
@@ -103,71 +95,131 @@ RtlMoveMemory(ptr, payload, ...)
 CreateThread(..., ptr, ...)
 ```
 
-This ensures fileless execution, avoiding disk-based detection and AV scanning.
+* Runs entirely in memory
+* Avoids touching disk, bypasses most AV scanning engines
 
 ---
 
-## 🚀 Usage
+## 🚀 Usage Guide
 
-Prepare any binary payload (e.g., shellcode, ELF file) and name it `shell.elf`. Then run the main generator:
+1. Prepare your binary payload (e.g., raw shellcode, `.elf`, `.exe`), and name it:
 
-```bash
-python chenyanxi.py
-```
+   ```
+   shell.elf
+   ```
 
-After execution, a Python script named `ultra_shell.py` will be generated, containing the fully obfuscated and encrypted shell.
+2. Run the main shell generator:
+
+   ```bash
+   python chenyanxi.py
+   ```
+
+3. The output will be a fully obfuscated Python payload script:
+
+   ```
+   ultra_shell.py
+   ```
 
 ---
 
-## 📁 Project Structure
+## 🧰 Project Structure
 
 ```
 chenyanxi/
-├── chenyanxi.py           # Main shell packer script
-├── shell.elf              # Example payload (replace with your own)
-├── ultra_shell.py         # Output Python shell script with layered encryption
-└── README.md              # This documentation file
-
-Optionally, the shell can also be compiled into `dist/` or `build/` directories using packers.
+├── chenyanxi.py           # Main wrapper generator
+├── shell.elf              # Example binary payload
+├── ultra_shell.py         # Final obfuscated Python shell
+├── image/                 # Screenshot directory
+└── README.md              # This documentation
 ```
-<img src="image/Screenshot 2025-06-24 185736.png" width="600"/>
+
+---
+
+## 🧪 Packaging (Nuitka + UPX)
+
+### Install dependencies:
+
+```bash
+sudo apt update
+sudo apt install patchelf upx makeself
+```
+
+### Compile with Nuitka:
+
+```bash
+nuitka --follow-imports --standalone ultra_shell.py
+```
+
+### Strip and compress output binary:
+
+```bash
+strip ultra_shell.dist/ultra_shell.bin
+upx -9 ultra_shell.dist/ultra_shell.bin
+```
+
+### Create self-extracting onefile binary:
+
+```bash
+sudo apt install makeself
+makeself --nox11 ultra_shell.dist/ ultra_shell.run "Ultra Shell Installer" ./ultra_shell.bin
+```
+
+### Final output:
+
+```
+ultra_shell.run  ← Standalone executable with in-memory payload
+```
+result:
+
+<img src="image/Screenshot 2025-06-24 185736.png" width="600"/>  
+<img src="image/Screenshot 2025-06-24 185655.png" width="600"/>
+
+Alternatively, you **can** use PyInstaller (not recommended):
+
+```
+pyinstaller --onefile ultra_shell.py
+```
+
+
+<img src="image/Screenshot 2025-06-24 185736.png" width="600"/> 
 <img src="image/Screenshot 2025-06-24 185656.png" width="600"/>
+
 ---
 
 ## 📌 Notes
 
-* The script requires the `pycryptodome` module. Install it with:
+* This project requires the `pycryptodome` package:
 
   ```bash
   pip install pycryptodome
   ```
 
-* The output shell is designed for **Windows** by default. To adapt for Linux, modify `winreg`, `ctypes`, and related logic accordingly.
+* Default shell is Windows-compatible (uses `winreg`, `ctypes.windll`),
+  for Linux compatibility, manually adapt platform-specific code.
 
-* For enhanced evasion, use `pyarmor`, `nuitka`, or `obfuscator-llvm` to compile and obfuscate the generated shell script.
+* Consider combining with `pyarmor`, `obfuscator-llvm`, or other obfuscation tools for maximum stealth.
 
 ---
 
 ## 📢 Disclaimer
 
-> **This project is intended for educational, academic, and authorized security research only. Misuse of this tool for illegal purposes is strictly forbidden. The author assumes no responsibility for any misuse or damages caused.**
+> This project is strictly for educational, authorized testing, and research purposes only.
+> Any misuse is the sole responsibility of the user. The author assumes no liability for any consequences.
 
 ---
 
-## ⭐ Acknowledgements & References
+## ⭐ Credits & References
 
-* [PyCryptoDome](https://github.com/Legrandin/pycryptodome)
+* [PyCryptodome](https://github.com/Legrandin/pycryptodome) - Cryptographic primitives
 * [Metasploit Framework](https://github.com/rapid7/metasploit-framework)
 * [Veil Framework](https://github.com/Veil-Framework/Veil)
-* Research papers and tools on sandbox evasion, encryption shells, and control flow obfuscation
+* Academic & practical research on APT memory shells, obfuscation, and anti-analysis
 
 ---
 
 ## ❤️ Support This Project
 
-If you find this project useful, please give it a ⭐Star!
-Feel free to Fork / Open Issues / Submit PRs to improve it together!
-
-```
+If you found this project helpful, please consider giving it a ⭐Star!
+Forks, Issues, and PRs are welcome to help improve and evolve the project.
 
 
