@@ -131,8 +131,8 @@ chenyanxi/
 当然，也有可以生成到dist和build目录里！
 
 ```
-<img src="images/Screenshot 2025-06-24 185736.png" width="600"/>
-<img src="images/Screenshot 2025-06-24 185656.png" width="600"/>
+<img src="image/Screenshot 2025-06-24 185736.png" width="600"/>
+<img src="image/Screenshot 2025-06-24 185656.png" width="600"/>
 ---
 
 ## 📌 注意事项
