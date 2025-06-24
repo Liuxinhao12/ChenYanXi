@@ -161,6 +161,7 @@ upx -9 ultra_shell.dist/ultra_shell.bin
 生成单文件运行包：
 
 ```bash
+sudo apt install makeself
 makeself --nox11 ultra_shell.dist/ ultra_shell.run "Ultra Shell Installer" ./ultra_shell.bin
 ```
 
@@ -175,6 +176,11 @@ ultra_shell.run  ← 可直接执行，自动解压 + 加载内存木马
 <img src="image/Screenshot 2025-06-24 185655.png" width="600"/>
 
 或者你可以使用pyinstaller（不推荐）：
+
+```
+pyinstaller --onefile ultra_shell.py
+```
+
 
 <img src="image/Screenshot 2025-06-24 185736.png" width="600"/>
 <img src="image/Screenshot 2025-06-24 185656.png" width="600"/>
