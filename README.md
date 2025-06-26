@@ -112,7 +112,9 @@ CreateThread(..., ptr, ...)
 2. 运行壳体生成器：
 
    ```bash
-   python chenyanxi.py
+   ./chenyanxi_linux 
+   或者
+    chenyanxi_win.exe 
    ```
 
 3. 输出结果为免杀壳体脚本：
@@ -133,10 +135,11 @@ chenyanxi/
 ├── image/                 # 截图目录
 └── README.md              # 本文档
 ```
+## 🧪 Windows 打包建议（Nuitka）
 
 ---
 
-## 🧪 打包建议（Nuitka + UPX）
+## 🧪 Linux 打包建议（Nuitka + UPX）
 
 安装依赖：
 
@@ -175,7 +178,8 @@ ultra_shell.run  ← 可直接执行，自动解压 + 加载内存木马
 <img src="image/Screenshot 2025-06-24 185736.png" width="600"/>
 <img src="image/Screenshot 2025-06-24 185655.png" width="600"/>
 
-或者你可以使用pyinstaller（不推荐）：
+
+或者win和Linux可以使用pyinstaller（不推荐）：
 
 ```
 pyinstaller --onefile ultra_shell.py
