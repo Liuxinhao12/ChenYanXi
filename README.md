@@ -11,7 +11,7 @@
 
 **ChenYanXi** 是一个专为安全研究人员与红队测试者设计的高级壳体生成框架，基于 Python 实现，融合多层动态加密、控制流扰乱、虚拟机检测、无文件执行等核心技术。
 
-它可以将任意二进制 Payload（如 `.elf`、`.exe`、shellcode）封装为复杂的 Python 壳体，具备**强抗分析能力、极低查杀率与多平台兼容性**，并可通过 Nuitka 进一步生成高度隐匿的单文件执行程序。
+它可以将二进制 Payload（如 `.elf`、`.exe`）封装为复杂的 Python 壳体，具备**强抗分析能力、极低查杀率与多平台兼容性**，并可通过 Nuitka 进一步生成高度隐匿的单文件执行程序。
 
 ---
 
@@ -19,10 +19,10 @@
 
 | 模块                 | 描述                                  |
 | ------------------ | ----------------------------------- |
-| 🔐 **多层加密 + 压缩**   | 支持最多 8 层 `zlib` + AES/DES 混合加密      |
+| 🔐 **多层加密 + 压缩**   | 支持最多 18 层 `zlib` + AES/DES 混合加密      |
 | 🔑 **动态密钥派生**      | 使用 `PBKDF2-HMAC-SHA256` 加盐密钥衍生，层层不同 |
 | 🌀 **控制流伪装**       | 自动插入无害分支，扰乱程序流程分析                   |
-| 🔎 **反沙箱 / 反调试**   | 检测 VM、调试器，一旦命中立即退出                  |
+| 🔎 **反沙箱 / 反调试 / 反抓包**   | 检测 VM、调试器、抓包器，一旦命中立即退出                  |
 | 🧱 **字符串混淆**       | 所有敏感字符串 `chr()` 拼接，躲避特征匹配           |
 | 🧬 **内存加载执行**      | 仅加载进 RAM，避免落盘，抗杀软扫描                 |
 | 🗂️ **注册表伪驻留（模拟）** | 虚拟添加启动项，无真实写入，迷惑分析器                 |
@@ -40,7 +40,7 @@
 3. 随机使用 AES 或 DES（CBC）对称加密
 4. 加密结果再 Base64 封装
 
-多达 **8 层嵌套式处理**，构建“洋葱壳”，极难逆向。
+多达 **最多18层嵌套式处理**，构建“洋葱壳”，极难逆向。
 
 ---
 
@@ -101,26 +101,51 @@ CreateThread(..., ptr, ...)
 
 ---
 
+## 使用命令
+
+---
+```
+usage: chenyanxi.exe [-h] [-l LAYERS] [--no-drop] payload
+
+OR
+
+usage:./chenyanxi [-h] [-l LAYERS] [--no-drop] payload
+
+positional arguments:
+  payload               可执行有效负载的文件（例如，shell.exe，shell.elf）
+
+options:
+  -h, --help            show this help message and exit
+  -l LAYERS, --layers LAYERS
+                        加密层（1-18），默认是3
+  --no-drop             仅在内存中运行
+```
+---
+
 ## 🚀 使用方法
 
-1. 准备一个二进制 Payload（如 shellcode、`.elf`、`.exe`），命名为：
+1. 准备一个二进制 Payload（如`.elf`、`.exe`），命名为：
 
    ```
    shell.elf
+
+   shell.exe
    ```
 
 2. 运行壳体生成器：
 
    ```bash
-   ./chenyanxi_linux 
+   ./chenyanxi -l 18 shell.elf
+   
    或者
-    chenyanxi_win.exe 
+   
+    chenyanxi.exe -l 18 shell.exe
    ```
 
 3. 输出结果为免杀壳体脚本：
 
    ```
-   ultra_shell.py
+   packed_shell.py
    ```
 
 ---
@@ -129,14 +154,32 @@ CreateThread(..., ptr, ...)
 
 ```
 chenyanxi/
-├── chenyanxi.py           # 主生成器脚本
+├── chenyanxi           # 主生成器脚本
 ├── shell.elf              # 示例 Payload（二进制）
+├── shell.exe
+├── chenyanxi.exe
 ├── ultra_shell.py         # 输出带壳 Python 木马
 ├── image/                 # 截图目录
 └── README.md              # 本文档
 ```
+---
 ## 🧪 Windows 打包建议（Nuitka）
 
+安装依赖：
+```
+pip install pycryptodome psutil nuitka
+```
+使用 Nuitka 打包：
+```
+nuitka --mingw64 --standalone --onefile packed_shell.py
+
+```
+
+最终输出：
+```
+packed_shell.exe
+
+```
 ---
 
 ## 🧪 Linux 打包建议（Nuitka + UPX）
@@ -145,33 +188,34 @@ chenyanxi/
 
 ```bash
 sudo apt update
+pip install nuitka pycryptodome psutil
 sudo apt install patchelf upx makeself
 ```
 
 使用 Nuitka 打包：
 
 ```bash
-nuitka --follow-imports --standalone ultra_shell.py
+nuitka --follow-imports --standalone --onefile packed_shell.py
 ```
 
 压缩主可执行文件：
 
 ```bash
-strip ultra_shell.dist/ultra_shell.bin
-upx -9 ultra_shell.dist/ultra_shell.bin
+strip packed_shell.dist/packed_shell.bin
+upx -9 packed_shell.dist/packed_shell.bin
 ```
 
 生成单文件运行包：
 
 ```bash
 sudo apt install makeself
-makeself --nox11 ultra_shell.dist/ ultra_shell.run "Ultra Shell Installer" ./ultra_shell.bin
+makeself --nox11 packed_shell.dist/ packed_shell.run "Packed Shell Installer" ./packed_shell.bin
 ```
 
 最终输出：
 
 ```
-ultra_shell.run  ← 可直接执行，自动解压 + 加载内存木马
+packed_shell.run  ← 可直接执行，自动解压 + 加载内存木马
 ```
 结果：
 
@@ -182,7 +226,7 @@ ultra_shell.run  ← 可直接执行，自动解压 + 加载内存木马
 或者win和Linux可以使用pyinstaller（不推荐）：
 
 ```
-pyinstaller --onefile ultra_shell.py
+pyinstaller --onefile packed_shell.py
 ```
 
 
@@ -195,9 +239,9 @@ pyinstaller --onefile ultra_shell.py
 * 项目依赖：
 
   ```bash
-  pip install pycryptodome
+  pip install pycryptodome psutil nuitka
   ```
-* 默认针对 Windows 平台（包含 `winreg`, `ctypes.windll`），如用于 Linux 请适配；
+* 默认针对 Windows 平台（包含 `winreg`, `ctypes.windll`），如用于 Linux 可能有一些未知的问题；
 * 建议搭配 `pyarmor`、`obfuscator-llvm` 等工具进一步加壳混淆。
 
 ---
